@@ -105,6 +105,7 @@ class Zenoss():
 
 
     def get_events(self, device=None, component=None, eventClass=None, limit=100):
+
         data = dict(start=0, limit=limit, dir='DESC', sort='severity')
         data['params'] = dict(severity=[5,4,3,2], eventState=[0,1])
 
@@ -112,7 +113,7 @@ class Zenoss():
         if component: data['params']['component'] = component
         if eventClass: data['params']['eventClass'] = eventClass
 
-        return self._router_request('EventsRouter', 'query', [data])['result']
+        return self._router_request('EventsRouter', 'query', [data])
 
 
     def add_device(self, deviceName, deviceClass):
