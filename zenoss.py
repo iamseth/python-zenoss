@@ -104,8 +104,8 @@ class Zenoss():
                                     data=[{'uid': deviceClass}])['result']
 
 
-    def get_events(self, device=None, component=None, eventClass=None):
-        data = dict(start=0, limit=100, dir='DESC', sort='severity')
+    def get_events(self, device=None, component=None, eventClass=None, limit=100):
+        data = dict(start=0, limit=limit, dir='DESC', sort='severity')
         data['params'] = dict(severity=[5,4,3,2], eventState=[0,1])
 
         if device: data['params']['device'] = device
