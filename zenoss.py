@@ -104,7 +104,7 @@ class Zenoss():
                                     data=[{'uid': deviceClass}])['result']
 
 
-    def get_events(self, systems=None, limit=100, prod_state=1000):
+    def get_events(self, systems=None, count=2, limit=100, prod_state=1000):
         results = []
 
         data = dict(start=0, limit=limit, dir='DESC', sort='severity')
@@ -120,10 +120,9 @@ class Zenoss():
                 events = self._router_request('EventsRouter', 'query',
                                          [data])['result']['events']
 
-
-                
                 for event in events:
-                    results.append(event)
+                    if int(event['count']) >= count:
+                        results.append(event)
 
         return results
 
