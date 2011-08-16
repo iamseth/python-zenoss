@@ -104,16 +104,28 @@ class Zenoss():
                                     data=[{'uid': deviceClass}])['result']
 
 
-    def get_events(self, device=None, component=None, eventClass=None, limit=100):
+    def get_events(self, systems=None, limit=100, prod_state=1000):
+        results = []
 
         data = dict(start=0, limit=limit, dir='DESC', sort='severity')
         data['params'] = dict(severity=[5,4,3,2], eventState=[0,1])
 
-        if device: data['params']['device'] = device
-        if component: data['params']['component'] = component
-        if eventClass: data['params']['eventClass'] = eventClass
+        #TODO make this take a prod state and get everything above that number
+        data['params']['prodState'] = str(prod_state)
 
-        return self._router_request('EventsRouter', 'query', [data])
+        if systems:            
+            for system in systems:
+                data['params']['Systems'] = system
+                
+                events = self._router_request('EventsRouter', 'query',
+                                         [data])['result']['events']
+
+
+                
+                for event in events:
+                    results.append(event)
+
+        return results
 
 
     def add_device(self, deviceName, deviceClass):
