@@ -174,6 +174,15 @@ class Zenoss():
         
         return self._router_request('DeviceRouter', 'setProductionState',
                                     [data])['result']['success']
+
+
+    def add_device(self, device_name, device_class, collector='localhost' ):  
+        data = dict(deviceName=device_name, deviceClass=device_class,
+                    title=device_name, collector=collector)
+        
+        return self._router_request('DeviceRouter', 'addDevice',
+                                    [data])['result']
+
         
     def send_event(self):
         pass
