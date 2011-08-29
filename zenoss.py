@@ -79,7 +79,7 @@ class Zenoss():
                     tid=self.req_count)])
 
         self.req_count += 1
-
+        
         # Submit the request and convert the returned JSON to objects
         return json.loads(self.urlOpener.open(req, req_data).read())
 
@@ -125,12 +125,7 @@ class Zenoss():
                         results.append(event)
 
         return results
-
-
-    def add_device(self, deviceName, deviceClass):
-        data = dict(deviceName=deviceName, deviceClass=deviceClass)
-        return self._router_request('DeviceRouter', 'addDevice', [data])
-
+    
 
     def create_event_on_device(self, device, severity, summary):
         if severity not in ('Critical', 'Error', 'Warning', 'Info', 'Debug', 'Clear'):
@@ -183,6 +178,20 @@ class Zenoss():
         return self._router_request('DeviceRouter', 'addDevice',
                                     [data])['result']
 
+
+    def get_device_info(self, device_name):
+        data = dict(uid=device_name)        
+        result = self._router_request('DeviceRouter', 'getInfo', [data])['result']
+
+        if result['success']:
+            return result['data']
+        else:
+            return None
+
+
+    def set_device_info(self, **kwargs):
+        return self._router_request('DeviceRouter', 'setInfo', [kwargs])
+           
         
     def send_event(self):
         pass
