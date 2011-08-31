@@ -164,7 +164,7 @@ class Zenoss():
     def set_production(self, device):
         '''Puts the device name into production mode'''
         
-        uid, hash = self._get_device_uid(device)        
+        uid, hash = self._get_device_uid(device)
         data = dict(uids=[uid], prodState=1000, hashcheck=hash)
         
         return self._router_request('DeviceRouter', 'setProductionState',
@@ -181,7 +181,8 @@ class Zenoss():
 
     def get_device_info(self, device_name):
         data = dict(uid=device_name)        
-        result = self._router_request('DeviceRouter', 'getInfo', [data])['result']
+        result = self._router_request('DeviceRouter',
+                                      'getInfo', [data])['result']
 
         if result['success']:
             return result['data']
@@ -189,13 +190,43 @@ class Zenoss():
             return None
 
 
-    def set_device_info(self, **kwargs):
-        return self._router_request('DeviceRouter', 'setInfo', [kwargs])
-           
+    def move_device(self, device, container):
+        '''takes the device name and container to move to        
+        container can be a group, system, or location'''
         
-    def send_event(self):
-        pass
-    
-    
-    def run_command(self):
-        pass
+        uid, hash = self._get_device_uid(device)
+        data = dict(uids = [uid], hashcheck = hash, container = container)    
+        result = self._router_request('DeviceRouter',
+                                      'moveDevices', [data])['result']
+        
+        if result['success']:
+            return True
+        else:
+            return None
+        
+        
+    def remove_device(self, device, container):        
+        uid, hash = self._get_device_uid(device)        
+        data = dict(uids = [uid], uid = container,
+                    hashcheck = hash, action="remove")
+        
+        result = self._router_request('DeviceRouter',
+                                      'removeDevices', [data])['result']
+        
+        if result['success']:
+            return True
+        else:
+            return None
+        
+    def delete_device(self, device):
+        uid, hash = self._get_device_uid(device)        
+        data = dict(uids = [uid],
+                    hashcheck = hash, action="delete")
+
+        result = self._router_request('DeviceRouter',
+                                      'removeDevices', [data])['result']
+        
+        if result['success']:
+            return True
+        else:
+            return None        
