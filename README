@@ -38,6 +38,6 @@ EXAMPLES
 
     from zenoss import Zenoss
 
-    z = Zenoss('http://zenosshost.com', 'admin', 'zenoss)
+    z = Zenoss('http://zenosshost.com', 'admin', 'zenoss')
     for event in z.get_events():
         print event
