@@ -230,8 +230,6 @@ class Zenoss(object):
         base_host = re.sub('//', login_params, self.host)
         
         url = '%s/%s' % (base_host, uid)
-        
-        print url
         f = urllib.urlopen(url, payload)
         
         if f.code == 200:
