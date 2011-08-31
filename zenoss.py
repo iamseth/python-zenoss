@@ -1,30 +1,4 @@
-'''
-The current license for this version is the "MIT License" as described by the Open Source Initiative.
-
-Copyright 2011 Seth Miller
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-'''
-
-#Some of this is "stolen" from the api example provided by Zenoss.
-#I mostly made additions and changed the naming convention
-
+import re
 import json
 import urllib
 import urllib2
@@ -48,6 +22,8 @@ class Zenoss(object):
         Initialize the API connection, log in, and store authentication cookie
         '''
         
+        self.password = password
+        self.username = username
         self.host = host
        
         self.urlOpener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
@@ -179,8 +155,9 @@ class Zenoss(object):
                                     [data])['result']
 
 
-    def get_device_info(self, device_name):
-        data = dict(uid=device_name)        
+    def get_device_info(self, device):
+        uid, hash = self._get_device_uid(device)
+        data = dict(uid = uid)
         result = self._router_request('DeviceRouter',
                                       'getInfo', [data])['result']
 
@@ -195,7 +172,8 @@ class Zenoss(object):
         container can be a group, system, or location'''
         
         uid, hash = self._get_device_uid(device)
-        data = dict(uids = [uid], hashcheck = hash, container = container)    
+        data = dict(uids = [uid], hashcheck = hash, target = container)
+        
         result = self._router_request('DeviceRouter',
                                       'moveDevices', [data])['result']
         
@@ -219,7 +197,13 @@ class Zenoss(object):
             return None
         
     def delete_device(self, device):
-        uid, hash = self._get_device_uid(device)        
+        
+        #if we can't look up the device, it's probably already deleted.
+        try:
+            uid, hash = self._get_device_uid(device)
+        except TypeError:
+            return False
+            
         data = dict(uids = [uid],
                     hashcheck = hash, action="delete")
 
@@ -229,4 +213,34 @@ class Zenoss(object):
         if result['success']:
             return True
         else:
-            return None        
+            return False
+        
+        
+    def set_device_property(self, device, property, value):
+        '''
+        Args:
+            device: Name of device to edit
+            property: Property to update
+            value: Value of property to be set
+        '''
+        
+        uid, hash = self._get_device_uid(device)
+        payload = 'zenScreenName=deviceCustomEdit&%s%%3Astring=%s&saveCustProperties%%3Amethod=+Save+' % (property, value)
+        login_params = '//%s:%s@' % (self.username, self.password)        
+        base_host = re.sub('//', login_params, self.host)
+        
+        url = '%s/%s' % (base_host, uid)
+        
+        print url
+        f = urllib.urlopen(url, payload)
+        
+        if f.code == 200:
+            return True
+        else:
+            return False
+        
+        
+        
+        
+        
+        
