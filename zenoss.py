@@ -73,7 +73,14 @@ class Zenoss(object):
 
 
     def _get_device_uid(self, device_name):        
-        '''finds the UID for a device'''
+        '''
+        Internally used method for finding the path for a device name.
+
+        Args:
+
+            device_name: Name of device as it appears in Zenoss
+
+        '''
 
         data = dict(limit=500000000)
         devices = self._router_request('DeviceRouter', 'getDevices',
@@ -87,9 +94,17 @@ class Zenoss(object):
         return None
 
 
-    def get_devices(self, deviceClass='/zport/dmd/Devices'):
+    def get_devices(self, device_class='/zport/dmd/Devices'):
+        '''
+        Returns a list of all devices for a particular device class
+
+        Args:
+            device_class (optional): Defaults to all classes
+
+        '''
+        
         return self._router_request('DeviceRouter', 'getDevices',
-                                    data=[{'uid': deviceClass}])['result']
+                                    data=[{'uid': device_class}])['result']
 
 
     def get_events(self, systems=None, count=2, limit=100, prod_state=1000):
