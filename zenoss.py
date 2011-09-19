@@ -72,6 +72,19 @@ class Zenoss(object):
         return json.loads(self.urlOpener.open(req, req_data).read())
 
 
+    def _soap_request(self, data):
+        '''Some calls can't be made via JSON'''
+        
+        login_params = '//%s:%s@' % (self.username, self.password)        
+        base_host = re.sub('//', login_params, self.host)
+        url = '%s/%s' % (base_host, uid)
+        f = urllib.urlopen(url, data)
+        
+        if f.code == 200:
+            return True
+        else:
+            return False
+
     def _get_device_uid(self, device_name):        
         '''
         Internally used method for finding the path for a device name.
@@ -254,17 +267,11 @@ class Zenoss(object):
         '''
         
         uid, hash = self._get_device_uid(device)
-        payload = 'zenScreenName=deviceCustomEdit&%s%%3Astring=%s&saveCustProperties%%3Amethod=+Save+' % (property, value)
-        login_params = '//%s:%s@' % (self.username, self.password)        
-        base_host = re.sub('//', login_params, self.host)
-        
-        url = '%s/%s' % (base_host, uid)
-        f = urllib.urlopen(url, payload)
-        
-        if f.code == 200:
-            return True
-        else:
-            return False
+        data = 'zenScreenName=deviceCustomEdit&%s%%3Astring=%s
+                &saveCustProperties%%3Amethod=+Save+' % (property, value)
+
+        return self._soap_request(data)
+
         
         
         
