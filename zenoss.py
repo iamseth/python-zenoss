@@ -39,6 +39,18 @@ class Zenoss(object):
 
 
     def _router_request(self, router, method, data=[]):
+        '''
+        Make JSON calls to the server after auth
+
+        Args:
+            router: Router to make the request against.
+                    Must be in list of ROUTERS
+
+            method: Particular method call in the router.
+
+            data: Payload to pass along to the router method.
+        '''
+
         if router not in ROUTERS:
             raise Exception('Router "' + router + '" not available.')
 
@@ -197,7 +209,6 @@ class Zenoss(object):
             return None
         
     def delete_device(self, device):
-        
         #if we can't look up the device, it's probably already deleted.
         try:
             uid, hash = self._get_device_uid(device)
@@ -217,6 +228,9 @@ class Zenoss(object):
         
         
     def set_device_property(self, device, property, value):
+        #Using Wireshark, I sniffed this off the wire. Looks like
+        #they don't use JSON for everything. $%#!@% Zenoss!!!
+
         '''
         Args:
             device: Name of device to edit
