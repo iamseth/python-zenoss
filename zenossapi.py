@@ -2,6 +2,9 @@ import re
 import json
 import urllib
 import urllib2
+from zlib import compress, decompress
+from base64 import b64encode, b64decode
+
 
 ROUTERS = { 'MessagingRouter': 'messaging',
             'EventsRouter': 'evconsole',
@@ -292,3 +295,23 @@ class ZenossAPI(object):
                 &saveCustProperties%%3Amethod=+Save+' % (property, value)
 
         return self._soap_request(data)
+    
+
+    def encode_url(self, s):
+        '''Encodes RRD text into a Zenoss URL for displaying graphs
+
+        Arguments:
+            s: Plain text string of RRD
+
+        Returns:
+            An encoded string for downloading PNG graphs from Zenoss
+        '''
+
+        s = '|'.join(s.split('\r\n'))
+        s = compress(s, 9)
+        s = b64encode(s)
+        s = s.replace('/','_').replace('+','-')
+        s = s.replace('\n','')
+
+        return s
+
