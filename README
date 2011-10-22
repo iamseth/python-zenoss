@@ -1,8 +1,8 @@
 README
-	zenoss.py -- A module to interact with Zenoss more easily.
+	zenossapi.py -- A module to interact with Zenoss more easily.
 
 VERSION
-	The current version is 0.1.
+	The current version is 0.2.
 
 LICENSE
 
@@ -36,8 +36,10 @@ INSTALLATION
         
 EXAMPLES
 
-    from zenoss import Zenoss
+    from zenossapi import Zenoss
 
-    z = Zenoss('http://zenosshost.com', 'admin', 'zenoss')
+    z = Zenoss()
+    z.connect('http://zenosshost.com', 'admin', 'zenoss')
+
     for event in z.get_events():
-        print event
+        print 'Device: %s\tSummary: %s\n' % (event['device']['text'], event['summary'])

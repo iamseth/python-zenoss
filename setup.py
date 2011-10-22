@@ -6,5 +6,5 @@ setup(name='python-zenoss',
       description='Zenoss API',
       author="Seth Miller",
       author_email='seth@migrantgeek.com',
-      py_modules=['zenoss',],
+      py_modules=['zenossapi',],
       ext_modules = [] )
