@@ -36,9 +36,9 @@ INSTALLATION
         
 EXAMPLES
 
-    from zenossapi import Zenoss
+    from zenossapi import ZenossAPI
 
-    z = Zenoss()
+    z = ZenossAPI()
     z.connect('http://zenosshost.com', 'admin', 'zenoss')
 
     for event in z.get_events():

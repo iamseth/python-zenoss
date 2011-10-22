@@ -15,7 +15,7 @@ ROUTERS = { 'MessagingRouter': 'messaging',
             'MibRouter': 'mib',
             'ZenPackRouter': 'zenpack' }
 
-class Zenoss(object):
+class ZenossAPI(object):
     
     def __init__(self):
         pass
