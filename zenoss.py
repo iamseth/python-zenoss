@@ -265,16 +265,9 @@ class Zenoss(object):
             property: Property to update
             value: Value of property to be set
         '''
-        
+
         uid, hash = self._get_device_uid(device)
-        data = 'zenScreenName=deviceCustomEdit&%s%%3Astring=%s
+        data = 'zenScreenName=deviceCustomEdit&%s%%3Astring=%s\
                 &saveCustProperties%%3Amethod=+Save+' % (property, value)
 
         return self._soap_request(data)
-
-        
-        
-        
-        
-        
-        
