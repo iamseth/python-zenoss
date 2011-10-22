@@ -17,7 +17,10 @@ ROUTERS = { 'MessagingRouter': 'messaging',
 
 class Zenoss(object):
     
-    def __init__(self, host, username, password):
+    def __init__(self):
+        pass
+
+    def connect(self, host, username, password):
         ''''
         Initialize the API connection, log in, and store authentication cookie
         '''
@@ -108,26 +111,36 @@ class Zenoss(object):
 
 
     def get_devices(self, device_class='/zport/dmd/Devices'):
-        '''
-        Returns a list of all devices for a particular device class
+        '''Gets all devices for a particular device class
 
-        Args:
+        Arguments:
             device_class (optional): Defaults to all classes
 
+        Returns:
+            dict
         '''
         
         return self._router_request('DeviceRouter', 'getDevices',
                                     data=[{'uid': device_class}])['result']
 
 
-    def get_events(self, systems=None, count=2, limit=100, prod_state=1000):
+    def get_events(self, systems=None, limit=100, count=1):
+        '''Gets events based on passed criteria.
+        Default is to return all events on all systems.
+
+        Arguments:
+            systems (optional): List of systems to get events for
+            limit (optional): Limit number of events returned
+            count (optional): Only return events greater or equal this
+
+        Returns:
+            dict
+        '''
+
         results = []
 
         data = dict(start=0, limit=limit, dir='DESC', sort='severity')
-        data['params'] = dict(severity=[5,4,3,2], eventState=[0,1])
-
-        #TODO make this take a prod state and get everything above that number
-        data['params']['prodState'] = str(prod_state)
+        data['params'] = dict(severity=[5,4,3,2,1,0], eventState=[0,1])
 
         if systems:            
             for system in systems:
@@ -139,6 +152,14 @@ class Zenoss(object):
                 for event in events:
                     if int(event['count']) >= count:
                         results.append(event)
+
+        #If no systems are specified, return all systems
+        else:
+            events = self._router_request('EventsRouter', 'query',
+                                      [data])['result']['events']
+            for event in events:
+                if int(event['count']) >= count:
+                    results.append(event)
 
         return results
     
