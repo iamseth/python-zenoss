@@ -316,19 +316,19 @@ class ZenossAPI(object):
         return s
 
 
-	def decode_url(self, s):
-	    '''Decode Zenoss URL to RRD
+    def decode_url(self, s):
+        '''Decode Zenoss URL to RRD
 
-	    Arguments:
-	        s: encoded URL after getopts in Zenoss graph URL
+        Arguments:
+            s: encoded URL after getopts in Zenoss graph URL
 
-	    Returns:
-	        RRD
-	    '''
+        Returns:
+            RRD
+        '''
 
-	    s = s.replace('-','+').replace('_','/')
-	    s = decompress(b64decode(s))
-	    s = '\n'.join(s.split('|'))
+        s = s.replace('-','+').replace('_','/')
+        s = decompress(b64decode(s))
+        s = '\n'.join(s.split('|'))
 
-	    return s
-	
+        return s
+
