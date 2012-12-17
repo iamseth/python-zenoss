@@ -2,13 +2,13 @@ README
 	zenossapi.py -- A module to interact with Zenoss more easily.
 
 VERSION
-	The current version is 0.2.
+	The current version is 0.3.
 
 LICENSE
 
 	The current license for this version is the "MIT License" as described by the Open Source Initiative.
 
-	Copyright 2011 Seth Miller
+	Copyright 2012 Seth Miller
 	
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal

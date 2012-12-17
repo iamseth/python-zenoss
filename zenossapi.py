@@ -1,334 +1,138 @@
-import re
+import os
 import json
 import urllib
 import urllib2
-from zlib import compress, decompress
-from base64 import b64encode, b64decode
+import logging as log
 
+ROUTERS = {'MessagingRouter': 'messaging',
+           'EventsRouter': 'evconsole',
+           'ProcessRouter': 'process',
+           'ServiceRouter': 'service',
+           'DeviceRouter': 'device',
+           'NetworkRouter': 'network',
+           'TemplateRouter': 'template',
+           'DetailNavRouter': 'detailnav',
+           'ReportRouter': 'report',
+           'MibRouter': 'mib',
+           'ZenPackRouter': 'zenpack'}
 
-ROUTERS = { 'MessagingRouter': 'messaging',
-            'EventsRouter': 'evconsole',
-            'ProcessRouter': 'process',
-            'ServiceRouter': 'service',
-            'DeviceRouter': 'device',
-            'NetworkRouter': 'network',
-            'TemplateRouter': 'template',
-            'DetailNavRouter': 'detailnav',
-            'ReportRouter': 'report',
-            'MibRouter': 'mib',
-            'ZenPackRouter': 'zenpack' }
+class ZenossAPI():
+    def __init__(self, debug=False):
+        self.debug = debug
+        if debug:
+            self.log_level = log.DEBUG
+        else:
+            self.log_level = log.INFO
 
-class ZenossAPI(object):
-    
-    def __init__(self):
-        pass
+        self.log_file = '%s/zenossapi.log' % os.getcwd()
+
+        log.basicConfig(filename=os.environ['HOME'] + '',
+            format='%(asctime)s.%(msecs).03d - %(funcName)s - %(levelname)s: %(message)s',
+            level=self.log_level,
+            datefmt='%b %d %H:%M:%S')
 
     def connect(self, host, username, password):
-        ''''
-        Initialize the API connection, log in, and store authentication cookie
-        '''
-        
         self.password = password
         self.username = username
         self.host = host
-       
-        self.urlOpener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
         self.req_count = 1
-    
+
+        self.urlOpener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
+        if self.debug: self.urlOpener.add_handler(urllib2.HTTPHandler(debuglevel=1))
+
         login_params = urllib.urlencode(dict(
-                        __ac_name = username,
-                        __ac_password = password,
-                        submitted = 'true',
-                        came_from = host + '/zport/dmd'))
-        self.urlOpener.open(host + '/zport/acl_users/cookieAuthHelper/login',
-                            login_params)
+            __ac_name=username,
+            __ac_password=password,
+            submitted='true',
+            came_from=host + '/zport/dmd'))
 
+        log.info('Connecting to %s as %s' % (host, username))
+        self.urlOpener.open(host + '/zport/acl_users/cookieAuthHelper/login', login_params)
 
-    def _router_request(self, router, method, data=[]):
-        '''
-        Make JSON calls to the server after auth
-
-        Args:
-            router: Router to make the request against.
-                    Must be in list of ROUTERS
-
-            method: Particular method call in the router.
-
-            data: Payload to pass along to the router method.
-        '''
-
+    def _router_request(self, router, method, data=None):
         if router not in ROUTERS:
             raise Exception('Router "' + router + '" not available.')
 
-        req = urllib2.Request(self.host + '/zport/dmd/' +
-                              ROUTERS[router] + '_router')
-
+        req = urllib2.Request('%s/zport/dmd/%s_router' % (self.host, ROUTERS[router]))
         req.add_header('Content-type', 'application/json; charset=utf-8')
 
         req_data = json.dumps([dict(
-                    action=router,
-                    method=method,
-                    data=data,
-                    type='rpc',
-                    tid=self.req_count)])
+            action=router,
+            method=method,
+            data=data,
+            type='rpc',
+            tid=self.req_count)])
 
         self.req_count += 1
-        
-        # Submit the request and convert the returned JSON to objects
-        return json.loads(self.urlOpener.open(req, req_data).read())
+        log.info('Making request to router %s with method %s' % (router, method))
+        log.debug('Request data: ' % req_data)
+        return json.loads(self.urlOpener.open(req, req_data).read())['result']
 
+    def get_devices(self, deviceClass='/zport/dmd/Devices'):
+        log.info('Getting all devices')
+        return self._router_request('DeviceRouter', 'getDevices', data=[{'uid': deviceClass, 'params': {}}])
 
-    def _soap_request(self, data):
-        '''Some calls can't be made via JSON'''
-        
-        login_params = '//%s:%s@' % (self.username, self.password)        
-        base_host = re.sub('//', login_params, self.host)
-        url = '%s/%s' % (base_host, uid)
-        f = urllib.urlopen(url, data)
-        
-        if f.code == 200:
-            return True
+    def find_device(self, device_name):
+        log.info('Finding device %s' % device_name)
+        device = filter(lambda x: x['name'] == device_name, self.get_devices()['devices'])[0]
+        if not device:
+            log.error('Cannot locate device %s' % device_name)
+            raise Exception('Cannot locate device %s' % device_name)
         else:
-            return False
+            log.info('%s found' % device_name)
+            return device
 
-    def _get_device_uid(self, device_name):        
-        '''
-        Internally used method for finding the path for a device name.
-
-        Args:
-
-            device_name: Name of device as it appears in Zenoss
-
-        '''
-
-        data = dict(limit=500000000)
-        devices = self._router_request('DeviceRouter', 'getDevices',
-                                    [data])['result']
-        
-        for device in devices['devices']:
-            if device['name'] == device_name:
-                return (device['uid'], devices['hash'])
-
-        #name not found I guess, return None
-        return None
-
-
-    def get_devices(self, device_class='/zport/dmd/Devices'):
-        '''Gets all devices for a particular device class
-
-        Arguments:
-            device_class (optional): Defaults to all classes
-
-        Returns:
-            dict
-        '''
-        
-        return self._router_request('DeviceRouter', 'getDevices',
-                                    data=[{'uid': device_class}])['result']
-
-
-    def get_events(self, systems=None, limit=100, count=1):
-        '''Gets events based on passed criteria.
-        Default is to return all events on all systems.
-
-        Arguments:
-            systems (optional): List of systems to get events for
-            limit (optional): Limit number of events returned
-            count (optional): Only return events greater or equal this
-
-        Returns:
-            dict
-        '''
-
-        results = []
-
+    def get_events(self, device=None, limit=100, component=None, eventClass=None):
         data = dict(start=0, limit=limit, dir='DESC', sort='severity')
-        data['params'] = dict(severity=[5,4,3,2,1,0], eventState=[0,1])
+        data['params'] = dict(severity=[5, 4, 3, 2], eventState=[0, 1])
+        if device: data['params']['device'] = device
+        if component: data['params']['component'] = component
+        if eventClass: data['params']['eventClass'] = eventClass
+        log.info('Getting events for: %s' % data)
+        return self._router_request('EventsRouter', 'query', [data])
 
-        if systems:            
-            for system in systems:
-                data['params']['Systems'] = system
-                
-                events = self._router_request('EventsRouter', 'query',
-                                         [data])['result']['events']
+    def add_device(self, device_name, device_class):
+        log.info('Adding %s' % device_name)
+        data = dict(deviceName=device_name, deviceClass=device_class)
+        return self._router_request('DeviceRouter', 'addDevice', [data])
 
-                for event in events:
-                    if int(event['count']) >= count:
-                        results.append(event)
+    def remove_device(self, device_name):
+        log.info('Removing %s' % device_name)
+        device = self.find_device(device_name)
+        data = dict(uids=[device['uid']], hashcheck=device['hash'], action='delete')
+        return self._router_request('DeviceRouter', 'removeDevices', [data])
 
-        #If no systems are specified, return all systems
-        else:
-            events = self._router_request('EventsRouter', 'query',
-                                      [data])['result']['events']
-            for event in events:
-                if int(event['count']) >= count:
-                    results.append(event)
+    def move_device(self, device_name, container):
+        log.info('Moving %s to %s' % (device_name, container))
+        device = self.find_device(device_name)
+        data = dict(uids=[device['uid']], hashcheck=device['hash'], target=container)
+        return self._router_request('DeviceRouter', 'moveDevices', [data])
 
-        return results
-    
+    def set_prod_state(self, device_name, prod_state):
+        log.info('Setting prodState on %s to %s' % (device_name, prod_state))
+        device = self.find_device(device_name)
+        data = dict(uids=[device['uid']], prodState=prod_state, hashcheck=device['hash'])
+        return self._router_request('DeviceRouter', 'setProductionState', [data])
 
-    def create_event_on_device(self, device, severity, summary):
-        if severity not in ('Critical', 'Error', 'Warning', 'Info', 'Debug', 'Clear'):
-            raise Exception('Severity "' + severity +'" is not valid.')
+    def set_maintenance(self, device_name):
+        return self.set_prod_state(device_name, 300)
 
-        data = dict(device=device, summary=summary, severity=severity,
-                    component='', evclasskey='', evclass='')
-        return self._router_request('EventsRouter', 'add_event', [data])
+    def set_production(self, device_name):
+        return self.set_prod_state(device_name, 1000)
 
+    def change_event_state(self, event_id, state):
+        log.info('Changing eventState on %s to %s' % (event_id, state))
+        return self._router_request('EventsRouter', state, [{'evids': [event_id]}])
 
     def ack_event(self, event_id):
-        '''acks an event ID'''
-        data = {'evids': [event_id]}
-        return self._router_request('EventsRouter', 'acknowledge',
-                                    [data])['result']['success']
-
+        return self.change_event_state(event_id, 'acknowledge')
 
     def close_event(self, event_id):
-        '''moves an event to history'''
-        data = {'evids': [event_id]}
-        
-        return self._router_request('EventsRouter', 'close',
-                                    [data])['result']['success']
+        return self.change_event_state(event_id, 'close')
 
-        
-    def set_maintenance(self, device):
-        '''Puts the device name into maintenance mode to prevent alerts'''
-        
-        uid, hash = self._get_device_uid(device)        
-        data = dict(uids=[uid], prodState=300, hashcheck=hash)
-        
-        return self._router_request('DeviceRouter', 'setProductionState',
-                                    [data])['result']['success']
-
-
-    def set_production(self, device):
-        '''Puts the device name into production mode'''
-        
-        uid, hash = self._get_device_uid(device)
-        data = dict(uids=[uid], prodState=1000, hashcheck=hash)
-        
-        return self._router_request('DeviceRouter', 'setProductionState',
-                                    [data])['result']['success']
-
-
-    def add_device(self, device_name, device_class, collector='localhost' ):  
-        data = dict(deviceName=device_name, deviceClass=device_class,
-                    title=device_name, collector=collector)
-        
-        return self._router_request('DeviceRouter', 'addDevice',
-                                    [data])['result']
-
-
-    def get_device_info(self, device):
-        uid, hash = self._get_device_uid(device)
-        data = dict(uid = uid)
-        result = self._router_request('DeviceRouter',
-                                      'getInfo', [data])['result']
-
-        if result['success']:
-            return result['data']
-        else:
-            return None
-
-
-    def move_device(self, device, container):
-        '''takes the device name and container to move to        
-        container can be a group, system, or location'''
-        
-        uid, hash = self._get_device_uid(device)
-        data = dict(uids = [uid], hashcheck = hash, target = container)
-        
-        result = self._router_request('DeviceRouter',
-                                      'moveDevices', [data])['result']
-        
-        if result['success']:
-            return True
-        else:
-            return None
-        
-        
-    def remove_device(self, device, container):        
-        uid, hash = self._get_device_uid(device)        
-        data = dict(uids = [uid], uid = container,
-                    hashcheck = hash, action="remove")
-        
-        result = self._router_request('DeviceRouter',
-                                      'removeDevices', [data])['result']
-        
-        if result['success']:
-            return True
-        else:
-            return None
-        
-    def delete_device(self, device):
-        #if we can't look up the device, it's probably already deleted.
-        try:
-            uid, hash = self._get_device_uid(device)
-        except TypeError:
-            return False
-            
-        data = dict(uids = [uid],
-                    hashcheck = hash, action="delete")
-
-        result = self._router_request('DeviceRouter',
-                                      'removeDevices', [data])['result']
-        
-        if result['success']:
-            return True
-        else:
-            return False
-        
-        
-    def set_device_property(self, device, property, value):
-        #Using Wireshark, I sniffed this off the wire. Looks like
-        #they don't use JSON for everything. $%#!@% Zenoss!!!
-
-        '''
-        Args:
-            device: Name of device to edit
-            property: Property to update
-            value: Value of property to be set
-        '''
-
-        uid, hash = self._get_device_uid(device)
-        data = 'zenScreenName=deviceCustomEdit&%s%%3Astring=%s\
-                &saveCustProperties%%3Amethod=+Save+' % (property, value)
-
-        return self._soap_request(data)
-    
-
-    def encode_url(self, s):
-        '''Encodes RRD text into a Zenoss URL for displaying graphs
-
-        Arguments:
-            s: Plain text string of RRD
-
-        Returns:
-            An encoded string for downloading PNG graphs from Zenoss
-        '''
-
-        s = '|'.join(s.split('\r\n'))
-        s = compress(s, 9)
-        s = b64encode(s)
-        s = s.replace('/','_').replace('+','-')
-        s = s.replace('\n','')
-
-        return s
-
-
-    def decode_url(self, s):
-        '''Decode Zenoss URL to RRD
-
-        Arguments:
-            s: encoded URL after getopts in Zenoss graph URL
-
-        Returns:
-            RRD
-        '''
-
-        s = s.replace('-','+').replace('_','/')
-        s = decompress(b64decode(s))
-        s = '\n'.join(s.split('|'))
-
-        return s
-
+    def create_event_on_device(self, device_name, severity, summary):
+        log.info('Creating new event for %s with severity %s' % (device_name, severity))
+        if severity not in ('Critical', 'Error', 'Warning', 'Info', 'Debug', 'Clear'):
+            raise Exception('Severity %s is not valid.' % severity)
+        data = dict(device=device_name, summary=summary, severity=severity, component='', evclasskey='', evclass='')
+        return self._router_request('EventsRouter', 'add_event', [data])
