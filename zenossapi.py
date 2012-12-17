@@ -158,16 +158,33 @@ class ZenossAPI():
         return self._router_request('DeviceRouter', 'setInfo', [data])
 
     def remodel_device(self, device_name):
-        pass
+        """Submit a job to have a device remodeled.
+
+        """
+        return self._router_request('DeviceRouter', 'remodel', [dict(uid = self.find_device(data)['uid'])])
 
     def set_collector(self, device_name, collector):
-        pass
+        """Set collector for device.
+
+        """
+        device = self.find_device(device_name)
+        data = dict(uids=[device['uid']], hashcheck=device['hash'], collector=collector)
+        return self._router_request('DeviceRouter', 'setCollector', [data])
 
     def rename_device(self, device_name, new_name):
-        pass
+        """Rename a device.
 
-    def reset_ip(self, device_name):
-        pass
+        """
+        data = dict(uid=self.find_device(device_name)['uid'], newId=new_name)
+        return self._router_request('DeviceRouter', 'renameDevice', [data])
+
+    def reset_ip(self, device_name, ip=''):
+        """Reset IP address(es) of device to the results of a DNS lookup or a manually set address.
+
+        """
+        device = self.find_device(device_name)
+        data = dict(uids=[device['uid']], hashcheck=device['hash'], ip=ip)
+        return self._router_request('DeviceRouter', 'resetIp', [data])
 
     def get_events(self, device=None, limit=100, component=None, eventClass=None):
         """Find current events.
@@ -211,6 +228,7 @@ class ZenossAPI():
         return self._router_request('EventsRouter', 'add_event', [data])
 
     def get_templates(self):
-        pass
+        """Get all templates.
 
-
+        """
+        return self._router_request('TemplateRouter', [dict()])
