@@ -26,7 +26,7 @@ class ZenossAPI():
 
         self.log_file = '%s/zenossapi.log' % os.getcwd()
 
-        log.basicConfig(filename=os.environ['HOME'] + '',
+        log.basicConfig(filename=self.log_file,
             format='%(asctime)s.%(msecs).03d - %(funcName)s - %(levelname)s: %(message)s',
             level=self.log_level,
             datefmt='%b %d %H:%M:%S')
