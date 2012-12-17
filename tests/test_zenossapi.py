@@ -3,7 +3,7 @@ import unittest
 
 TEST_HOST = 'http://sethmiller-wsl:7000'
 TEST_USER = 'admin'
-TEST_PASSWORD = 'releng'
+TEST_PASSWORD = 'password'
 TEST_SERVERNAME = "testhost.com"
 
 class TestZenossAPI(unittest.TestCase):
@@ -29,6 +29,16 @@ class TestZenossAPI(unittest.TestCase):
 
     def test_create_event_on_device(self):
         self.api.create_event_on_device(TEST_SERVERNAME, 'Error', 'This is just an error')
+
+    def test_ack_event(self):
+        events = self.api.get_events()
+        if len(events) > 0:
+            self.assertTrue(self.api.ack_event(events[0]['evid'])['success'])
+
+    def test_close_event(self):
+        events = self.api.get_events()
+        if len(events) > 0:
+            self.assertTrue(self.api.close_event(events[0]['evid'])['success'])
 
 if __name__ == '__main__':
     unittest.main()

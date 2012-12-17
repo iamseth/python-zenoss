@@ -92,7 +92,6 @@ class ZenossAPI():
             log.error('Cannot locate device %s' % device_name)
             raise Exception('Cannot locate device %s' % device_name)
 
-
     def add_device(self, device_name, device_class, collector='localhost'):
         """Add a device.
 
@@ -201,7 +200,7 @@ class ZenossAPI():
         if component: data['params']['component'] = component
         if eventClass: data['params']['eventClass'] = eventClass
         log.info('Getting events for: %s' % data)
-        return self._router_request('EventsRouter', 'query', [data])
+        return self._router_request('EventsRouter', 'query', [data])['events']
 
     def change_event_state(self, event_id, state):
         """Change the state of an event.
