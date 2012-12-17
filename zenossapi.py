@@ -64,8 +64,8 @@ class ZenossAPI():
             tid=self.req_count)])
 
         self.req_count += 1
-        log.info('Making request to router %s with method %s' % (router, method))
-        log.debug('Request data: ' % req_data)
+        log.info('Making request to router %s with method %s', router, method)
+        log.debug('Request data: %s', req_data)
         return json.loads(self.urlOpener.open(req, req_data).read())['result']
 
     def get_devices(self, deviceClass='/zport/dmd/Devices'):
@@ -80,20 +80,25 @@ class ZenossAPI():
 
         """
         log.info('Finding device %s' % device_name)
-        device = filter(lambda x: x['name'] == device_name, self.get_devices()['devices'])[0]
-        if not device:
-            log.error('Cannot locate device %s' % device_name)
-            raise Exception('Cannot locate device %s' % device_name)
-        else:
+        all_devices = self.get_devices()
+
+        try:
+            device = filter(lambda x: x['name'] == device_name, all_devices['devices'])[0]
+            # We need to save the has for later operations
+            device['hash'] = all_devices['hash']
             log.info('%s found' % device_name)
             return device
+        except IndexError:
+            log.error('Cannot locate device %s' % device_name)
+            raise Exception('Cannot locate device %s' % device_name)
+
 
     def add_device(self, device_name, device_class, collector='localhost'):
         """Add a device.
 
         """
         log.info('Adding %s' % device_name)
-        data = dict(deviceName=device_name, deviceClass=device_class, model=True, collecto=collector)
+        data = dict(deviceName=device_name, deviceClass=device_class, model=True, collector=collector)
         return self._router_request('DeviceRouter', 'addDevice', [data])
 
     def remove_device(self, device_name):
