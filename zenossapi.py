@@ -145,7 +145,7 @@ class ZenossAPI():
         """
         log.info('Setting ProductInfo on %s' % device_name)
         device = self.find_device(device_name)
-        data = dict(uids=[device['uid']],
+        data = dict(uid=device['uid'],
             hwManufacturer=hw_manufacturer,
             hwProductName=hw_product_name,
             osManufacturer=os_manufacturer,
