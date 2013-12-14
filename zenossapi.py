@@ -68,12 +68,12 @@ class ZenossAPI():
         log.debug('Request data: %s', req_data)
         return json.loads(self.urlOpener.open(req, req_data).read())['result']
 
-    def get_devices(self, deviceClass='/zport/dmd/Devices'):
+    def get_devices(self, deviceClass='/zport/dmd/Devices', limit=None):
         """Get a list of all devices.
 
         """
         log.info('Getting all devices')
-        return self._router_request('DeviceRouter', 'getDevices', data=[{'uid': deviceClass, 'params': {}}])
+        return self._router_request('DeviceRouter', 'getDevices', data=[{'uid': deviceClass, 'params': {}, 'limit': limit}])
 
     def find_device(self, device_name):
         """Find a device by name.
