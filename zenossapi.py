@@ -158,7 +158,7 @@ class ZenossAPI():
             This method accepts any keyword argument for the property that you wish to set.
 
         """
-        data['uid'] = self.find_device(data)['uid']
+        data['uid'] = self.find_device(device_name)['uid']
         return self._router_request('DeviceRouter', 'setInfo', [data])
 
     def remodel_device(self, device_name):
