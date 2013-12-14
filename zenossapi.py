@@ -152,6 +152,14 @@ class ZenossAPI():
             osProductName=os_product_name)
         return self._router_request('DeviceRouter', 'setProductInfo', [data])
 
+    def set_rhel_release(self, device_name, release):
+        """Sets the proper release of RedHat Enterprise Linux."""
+        if type(release) is not float:
+            log.error("RHEL release must be a float")
+            return {u'success': False}
+        log.info('Setting RHEL release on {} to {}'.format(device_name, release))
+        device = self.find_device(device_name)
+        return self.set_product_info(device_name,device['hwManufacturer']['name'], device['hwModel']['name'], 'RedHat', 'RHEL {}'.format(release))
 
     def set_device_info(self, device_name, data):
         """Set attributes on a device or device organizer.
