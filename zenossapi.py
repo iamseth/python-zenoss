@@ -17,14 +17,6 @@ ROUTERS = {'MessagingRouter': 'messaging',
            'MibRouter': 'mib',
            'ZenPackRouter': 'zenpack'}
 
-# class HTTPSClientAuthConnection(httplib.HTTPSConnection):
-#     def __init__(self, host, timeout=None):
-#         httplib.HTTPSConnection.__init__(self, host, key_file='/Users/cgee/ops/personal_security_store/keys/cgee_mit_ssl.pem', cert_file='/Users/cgee/ops/personal_security_store/keys/cgee_mit_ssl.pem')
-#         self.timeout = timeout # Only valid in Python 2.6
-
-# class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
-#     def https_open(self, req):
-#         return self.do_open(HTTPSClientAuthConnection, req)
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     def __init__(self, key, cert):
         urllib2.HTTPSHandler.__init__(self)
@@ -32,9 +24,10 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
         self.cert = cert
 
     def https_open(self, req):
-        # Rather than pass in a reference to a connection class, we pass in
-        # a reference to a function which, for all intents and purposes,
-        # will behave as a constructor
+        """ Rather than pass in a reference to a connection class, we pass in
+        a reference to a function which, for all intents and purposes,
+        will behave as a constructor
+        """
         return self.do_open(self.getConnection, req)
 
     def getConnection(self, host, timeout=300):
@@ -62,7 +55,7 @@ class ZenossAPI():
         self.req_count = 1
 
         if not pem_path:
-            self.urlOpener = urlib2.build_opener(urllib2.HTTPCookieProcessor())
+            self.urlOpener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
             if self.debug: self.urlOpener.add_handler(urllib2.HTTPHandler(debuglevel=1))
         else:
             self.urlOpener = urllib2.build_opener(

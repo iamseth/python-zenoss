@@ -17,7 +17,8 @@ class TestZenossAPI(unittest.TestCase):
 
     def test_get_events(self):
         result = self.api.get_events()
-        self.assertTrue(type(result['events'] is list))
+        self.assertTrue(type(result is list))
+        self.assertTrue('count' in result[0])
 
     def test_add_device(self):
         result = self.api.add_device(TEST_SERVERNAME, '/Devices/Server/Linux')
