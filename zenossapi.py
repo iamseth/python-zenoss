@@ -2,6 +2,7 @@ import os
 import json
 import urllib
 import urllib2
+import httplib
 import logging as log
 
 ROUTERS = {'MessagingRouter': 'messaging',
@@ -15,6 +16,29 @@ ROUTERS = {'MessagingRouter': 'messaging',
            'ReportRouter': 'report',
            'MibRouter': 'mib',
            'ZenPackRouter': 'zenpack'}
+
+# class HTTPSClientAuthConnection(httplib.HTTPSConnection):
+#     def __init__(self, host, timeout=None):
+#         httplib.HTTPSConnection.__init__(self, host, key_file='/Users/cgee/ops/personal_security_store/keys/cgee_mit_ssl.pem', cert_file='/Users/cgee/ops/personal_security_store/keys/cgee_mit_ssl.pem')
+#         self.timeout = timeout # Only valid in Python 2.6
+
+# class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+#     def https_open(self, req):
+#         return self.do_open(HTTPSClientAuthConnection, req)
+class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+    def __init__(self, key, cert):
+        urllib2.HTTPSHandler.__init__(self)
+        self.key = key
+        self.cert = cert
+
+    def https_open(self, req):
+        # Rather than pass in a reference to a connection class, we pass in
+        # a reference to a function which, for all intents and purposes,
+        # will behave as a constructor
+        return self.do_open(self.getConnection, req)
+
+    def getConnection(self, host, timeout=300):
+        return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
 
 class ZenossAPI():
     def __init__(self, debug=False):
@@ -31,14 +55,20 @@ class ZenossAPI():
             level=self.log_level,
             datefmt='%b %d %H:%M:%S')
 
-    def connect(self, host, username, password):
+    def connect(self, host, username, password, pem_path=None):
         self.password = password
         self.username = username
         self.host = host
         self.req_count = 1
 
-        self.urlOpener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
-        if self.debug: self.urlOpener.add_handler(urllib2.HTTPHandler(debuglevel=1))
+        if not pem_path:
+            self.urlOpener = urlib2.build_opener(urllib2.HTTPCookieProcessor())
+            if self.debug: self.urlOpener.add_handler(urllib2.HTTPHandler(debuglevel=1))
+        else:
+            self.urlOpener = urllib2.build_opener(
+                urllib2.HTTPHandler(),
+                HTTPSClientAuthHandler(key=pem_path, cert=pem_path),
+                urllib2.HTTPCookieProcessor())
 
         login_params = urllib.urlencode(dict(
             __ac_name=username,
