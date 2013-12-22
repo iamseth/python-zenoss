@@ -262,8 +262,3 @@ class Zenoss():
         data = dict(device=device_name, summary=summary, severity=severity, component='', evclasskey='', evclass='')
         return self._router_request('EventsRouter', 'add_event', [data])
 
-    def get_templates(self):
-        """Get all templates.
-
-        """
-        return self._router_request('TemplateRouter', [dict()])
