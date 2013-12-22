@@ -30,7 +30,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
         """
         return self.do_open(self.getConnection, req)
 
-    def getConnection(self, host, timeout=300):
+    def getConnection(self, host):
         return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
 
 class Zenoss():
