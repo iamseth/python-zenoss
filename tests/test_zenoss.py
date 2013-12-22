@@ -1,15 +1,17 @@
-from zenoss import Zenoss
 import unittest
+
+from zenoss import Zenoss
+
 
 TEST_HOST = 'http://sethmiller-wsl:7000'
 TEST_USER = 'admin'
 TEST_PASSWORD = 'password'
-TEST_SERVERNAME = "testhost.com"
+TEST_SERVERNAME = 'testhost.com'
+
 
 class TestZenoss(unittest.TestCase):
     def setUp(self):
-        self.api = Zenoss(debug=True)
-        self.api.connect(TEST_HOST, TEST_USER, TEST_PASSWORD)
+        self.api = Zenoss(TEST_HOST, TEST_USER, TEST_PASSWORD, debug=True)
 
     def test_get_devices(self):
         result = self.api.get_devices()
@@ -40,6 +42,7 @@ class TestZenoss(unittest.TestCase):
         events = self.api.get_events()
         if len(events) > 0:
             self.assertTrue(self.api.close_event(events[0]['evid'])['success'])
+
 
 if __name__ == '__main__':
     unittest.main()
