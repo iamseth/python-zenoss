@@ -33,7 +33,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     def getConnection(self, host, timeout=300):
         return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
 
-class ZenossAPI():
+class Zenoss():
     def __init__(self, debug=False):
         self.debug = debug
         if debug:
@@ -41,7 +41,7 @@ class ZenossAPI():
         else:
             self.log_level = log.INFO
 
-        self.log_file = '%s/zenossapi.log' % os.getcwd()
+        self.log_file = '%s/zenoss.log' % os.getcwd()
 
         log.basicConfig(filename=self.log_file,
             format='%(asctime)s.%(msecs).03d - %(funcName)s - %(levelname)s: %(message)s',

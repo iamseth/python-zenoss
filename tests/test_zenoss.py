@@ -1,4 +1,4 @@
-from zenossapi import ZenossAPI
+from zenoss import Zenoss
 import unittest
 
 TEST_HOST = 'http://sethmiller-wsl:7000'
@@ -6,9 +6,9 @@ TEST_USER = 'admin'
 TEST_PASSWORD = 'password'
 TEST_SERVERNAME = "testhost.com"
 
-class TestZenossAPI(unittest.TestCase):
+class TestZenoss(unittest.TestCase):
     def setUp(self):
-        self.api = ZenossAPI(debug=True)
+        self.api = Zenoss(debug=True)
         self.api.connect(TEST_HOST, TEST_USER, TEST_PASSWORD)
 
     def test_get_devices(self):
