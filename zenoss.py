@@ -200,7 +200,7 @@ class Zenoss():
         """Submit a job to have a device remodeled.
 
         """
-        return self._router_request('DeviceRouter', 'remodel', [dict(uid = self.find_device(data)['uid'])])
+        return self._router_request('DeviceRouter', 'remodel', [dict(uid = self.find_device(device_name)['uid'])])
 
     def set_collector(self, device_name, collector):
         """Set collector for device.
