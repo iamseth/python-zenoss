@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-setup(name='python-zenoss',
+setup(name='zenoss',
     version="0.4.0",
     description='Module to work with the Zenoss JSON API.',
     author="Seth Miller",
