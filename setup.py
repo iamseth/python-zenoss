@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='python-zenoss',
-    version="0.3",
-    description='Zenoss API',
+    version="0.4.0",
+    description='Module to work with the Zenoss JSON API.',
     author="Seth Miller",
     author_email='seth@migrantgeek.com',
     url='https://github.com/migrantgeek/python-zenoss',
-    py_modules=['zenossapi',],
-    ext_modules = []
+    py_modules=['zenoss',],
+    keywords = ['zenoss', 'api', 'json', 'rest']
 )
