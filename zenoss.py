@@ -91,6 +91,10 @@ class Zenoss():
         log.debug('Request data: %s', req_data)
         return json.loads(self.urlOpener.open(req, req_data).read())['result']
 
+    def _rrd_request(self, device_uid, dsname):
+        req = urllib2.Request('%s/%s/getRRDValue?dsname=%s' % (self.host, device_uid, dsname))
+        return self.urlOpener.open(req).read()
+
     def get_devices(self, deviceClass='/zport/dmd/Devices', limit=None):
         """Get a list of all devices.
 
@@ -262,3 +266,8 @@ class Zenoss():
         data = dict(device=device_name, summary=summary, severity=severity, component='', evclasskey='', evclass='')
         return self._router_request('EventsRouter', 'add_event', [data])
 
+    def get_load_average(self, device_name):
+        """Returns the 5 minute load average for a device.
+        """
+        result = self._rrd_request(self.find_device(device_name)['uid'], 'laLoadInt5_laLoadInt5')
+        return round(float(result)/100.0, 2)
