@@ -9,5 +9,6 @@ setup(name='zenoss',
     author_email='seth@migrantgeek.com',
     url='https://github.com/migrantgeek/python-zenoss',
     py_modules=['zenoss',],
-    keywords = ['zenoss', 'api', 'json', 'rest']
+    keywords = ['zenoss', 'api', 'json', 'rest'],
+    test_suite='tests'
 )
