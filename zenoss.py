@@ -1,4 +1,5 @@
 import json
+import re
 import requests
 import logging as log
 
@@ -46,6 +47,14 @@ class Zenoss(object):
         log.debug('Request data: %s', req_data)
         response = self.__session.post('%s/zport/dmd/%s_router' % (self.__host, ROUTERS[router]), data=req_data,
                                        headers=headers)
+
+        # The API returns a 200 response code even whe auth is bad.
+        # With bad auth, the login page is displayed. Here I search for
+        # an element on the login form to determine if auth failed.
+        if re.search('name="__ac_name"', response.content):
+            log.error('Request failed. Bad username/password.')
+            raise Exception('Request failed. Bad username/password.')
+
         return json.loads(response.content)['result']
 
     def __rrd_request(self, device_uid, dsname):
