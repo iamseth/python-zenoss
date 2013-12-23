@@ -1,4 +1,4 @@
-python-zenoss [![Build Status](https://travis-ci.org/migrantgeek/python-zenoss.png)
+python-zenoss ![Build Status](https://travis-ci.org/migrantgeek/python-zenoss.png)
 =============
 
 Python module to work with the Zenoss JSON API
