@@ -1,7 +1,9 @@
-import json
 import re
+import json
+import logging
 import requests
-import logging as log
+
+log = logging.getLogger(__name__)
 
 ROUTERS = {'MessagingRouter': 'messaging',
            'EventsRouter': 'evconsole',
