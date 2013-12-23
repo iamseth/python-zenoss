@@ -16,6 +16,11 @@ ROUTERS = {'MessagingRouter': 'messaging',
            'ZenPackRouter': 'zenpack'}
 
 
+class ZenossException(Exception):
+    def __call__(self, *args):
+        return self.__class__(*(self.args + args))
+
+
 class Zenoss(object):
     def __init__(self, host, username, password, pem_path=None, debug=False):
         self.__host = host
@@ -53,7 +58,7 @@ class Zenoss(object):
         # an element on the login form to determine if auth failed.
         if re.search('name="__ac_name"', response.content):
             log.error('Request failed. Bad username/password.')
-            raise Exception('Request failed. Bad username/password.')
+            raise ZenossException('Request failed. Bad username/password.')
 
         return json.loads(response.content)['result']
 
