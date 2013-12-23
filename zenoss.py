@@ -1,8 +1,5 @@
-import os
 import json
-import urllib
-import urllib2
-import httplib
+import requests
 import logging as log
 
 ROUTERS = {'MessagingRouter': 'messaging',
@@ -18,83 +15,41 @@ ROUTERS = {'MessagingRouter': 'messaging',
            'ZenPackRouter': 'zenpack'}
 
 
-class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
-    def __init__(self, key, cert):
-        urllib2.HTTPSHandler.__init__(self)
-        self.key = key
-        self.cert = cert
-
-    def https_open(self, req):
-        """ Rather than pass in a reference to a connection class, we pass in
-        a reference to a function which, for all intents and purposes,
-        will behave as a constructor
-        """
-        return self.do_open(self.get_connection, req)
-
-    def get_connection(self, host):
-        return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
-
-
 class Zenoss(object):
     def __init__(self, host, username, password, pem_path=None, debug=False):
-        self.__password = password
-        self.__username = username
         self.__host = host
+        self.__session = requests.Session()
+        self.__session.auth = (username, password)
+        self.__pem_path = pem_path
+        self.__req_count = 0
 
         if debug:
-            self.log_level = log.DEBUG
+            self.__log_level = log.DEBUG
         else:
-            self.log_level = log.INFO
-
-        self.log_file = '%s/zenoss.log' % os.getcwd()
-
-        log.basicConfig(filename=self.log_file,
-                        format='%(asctime)s.%(msecs).03d - %(funcName)s - %(levelname)s: %(message)s',
-                        level=self.log_level, datefmt='%b %d %H:%M:%S')
-
-        self.req_count = 1
-
-        if not pem_path:
-            self.url_opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
-            if debug:
-                self.url_opener.add_handler(urllib2.HTTPHandler(debuglevel=1))
-        else:
-            self.url_opener = urllib2.build_opener(
-                urllib2.HTTPHandler(),
-                HTTPSClientAuthHandler(key=pem_path, cert=pem_path),
-                urllib2.HTTPCookieProcessor())
-
-        login_params = urllib.urlencode(dict(
-            __ac_name=username,
-            __ac_password=password,
-            submitted='true',
-            came_from=host + '/zport/dmd'))
-
-        log.info('Connecting to %s as %s', host, username)
-        self.url_opener.open(host + '/zport/acl_users/cookieAuthHelper/login', login_params)
+            self.__log_level = log.INFO
 
     def __router_request(self, router, method, data=None):
         if router not in ROUTERS:
             raise Exception('Router "' + router + '" not available.')
 
-        req = urllib2.Request('%s/zport/dmd/%s_router' % (self.__host, ROUTERS[router]))
-        req.add_header('Content-type', 'application/json; charset=utf-8')
+        headers = {'Content-type': 'application/json; charset=utf-8'}
 
         req_data = json.dumps([dict(
             action=router,
             method=method,
             data=data,
             type='rpc',
-            tid=self.req_count)])
+            tid=self.__req_count)])
 
-        self.req_count += 1
-        log.info('Making request to router %s with method %s', router, method)
+        self.__req_count += 1
+        log.debug('Making request to router %s with method %s', router, method)
         log.debug('Request data: %s', req_data)
-        return json.loads(self.url_opener.open(req, req_data).read())['result']
+        response = self.__session.post('%s/zport/dmd/%s_router' % (self.__host, ROUTERS[router]), data=req_data,
+                                       headers=headers)
+        return json.loads(response.content)['result']
 
     def __rrd_request(self, device_uid, dsname):
-        req = urllib2.Request('%s/%s/getRRDValue?dsname=%s' % (self.__host, device_uid, dsname))
-        return self.url_opener.open(req).read()
+        return self.__session.get('%s/%s/getRRDValue?dsname=%s' % (self.__host, device_uid, dsname)).content
 
     def get_devices(self, device_class='/zport/dmd/Devices', limit=None):
         """Get a list of all devices.
