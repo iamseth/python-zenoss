@@ -11,7 +11,7 @@ TEST_SERVERNAME = 'testhost.com'
 
 class TestZenoss(unittest.TestCase):
     def setUp(self):
-        self.api = Zenoss(TEST_HOST, TEST_USER, TEST_PASSWORD, debug=True)
+        self.api = Zenoss(TEST_HOST, TEST_USER, TEST_PASSWORD)
 
     def test_get_devices(self):
         result = self.api.get_devices()

@@ -24,23 +24,16 @@ class ZenossException(Exception):
 
 
 class Zenoss(object):
-    def __init__(self, host, username, password, pem_path=None, debug=False):
+    def __init__(self, host, username, password, pem_path=None):
         self.__host = host
         self.__session = requests.Session()
         self.__session.auth = (username, password)
         self.__pem_path = pem_path
         self.__req_count = 0
 
-        if debug:
-            self.__log_level = log.DEBUG
-        else:
-            self.__log_level = log.INFO
-
     def __router_request(self, router, method, data=None):
         if router not in ROUTERS:
             raise Exception('Router "' + router + '" not available.')
-
-        headers = {'Content-type': 'application/json; charset=utf-8'}
 
         req_data = json.dumps([dict(
             action=router,
@@ -49,11 +42,11 @@ class Zenoss(object):
             type='rpc',
             tid=self.__req_count)])
 
-        self.__req_count += 1
         log.debug('Making request to router %s with method %s', router, method)
-        log.debug('Request data: %s', req_data)
-        response = self.__session.post('%s/zport/dmd/%s_router' % (self.__host, ROUTERS[router]), data=req_data,
-                                       headers=headers)
+        uri = '%s/zport/dmd/%s_router' % (self.__host, ROUTERS[router])
+        headers = {'Content-type': 'application/json; charset=utf-8'}
+        response = self.__session.post(uri, data=req_data, headers=headers)
+        self.__req_count += 1
 
         # The API returns a 200 response code even whe auth is bad.
         # With bad auth, the login page is displayed. Here I search for
