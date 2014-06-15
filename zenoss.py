@@ -57,7 +57,8 @@ class Zenoss(object):
 
         return json.loads(response.content)['result']
 
-    def __rrd_request(self, device_uid, dsname):
+    def _rrd_request(self, device_name, dsname):
+        device_uid = self.find_device(device_name)['uid']
         return self.__session.get('%s/%s/getRRDValue?dsname=%s' % (self.__host, device_uid, dsname)).content
 
     def get_devices(self, device_class='/zport/dmd/Devices', limit=None):
@@ -239,5 +240,6 @@ class Zenoss(object):
     def get_load_average(self, device_name):
         """Returns the 5 minute load average for a device.
         """
-        result = self.__rrd_request(self.find_device(device_name)['uid'], 'laLoadInt5_laLoadInt5')
+        result = self._rrd_request(device_name), 'laLoadInt5_laLoadInt5')
         return round(float(result) / 100.0, 2)
+
