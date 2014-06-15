@@ -240,6 +240,6 @@ class Zenoss(object):
     def get_load_average(self, device_name):
         """Returns the 5 minute load average for a device.
         """
-        result = self._rrd_request(device_name), 'laLoadInt5_laLoadInt5')
+        result = self._rrd_request(device_name, 'laLoadInt5_laLoadInt5')
         return round(float(result) / 100.0, 2)
 
