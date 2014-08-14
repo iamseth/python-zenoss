@@ -198,7 +198,7 @@ class Zenoss(object):
 
         """
         data = dict(start=0, limit=limit, dir='DESC', sort='severity')
-        data['params'] = dict(severity=[5, 4, 3], eventState=[0, 1])
+        data['params'] = dict(severity=[5, 4, 3, 2], eventState=[0, 1])
         if device:
             data['params']['device'] = device
         if component:
