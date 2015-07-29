@@ -21,6 +21,8 @@ ROUTERS = {'MessagingRouter': 'messaging',
 
 
 class ZenossException(Exception):
+    '''Custom exception for Zenoss
+    '''
     pass
 
 
@@ -34,6 +36,8 @@ class Zenoss(object):
         self.__req_count = 0
 
     def __router_request(self, router, method, data=None):
+        '''Internal method to make calls to the Zenoss request router
+        '''
         if router not in ROUTERS:
             raise Exception('Router "' + router + '" not available.')
 
@@ -60,6 +64,8 @@ class Zenoss(object):
         return json.loads(response.content)['result']
 
     def _rrd_request(self, device_name, dsname):
+        '''Method to abstract the details of making a request to the getRRDValue method for a device
+        '''
         device_uid = self.find_device(device_name)['uid']
         return self.__session.get('%s/%s/getRRDValue?dsname=%s' % (self.__host, device_uid, dsname)).content
 
@@ -135,7 +141,7 @@ class Zenoss(object):
         """
         return self.set_prod_state(device_name, 1000)
 
-    def set_product_info(self, device_name, hw_manufacturer, hw_product_name, os_manufacturer, os_product_name):
+    def set_product_info(self, device_name, hw_manufacturer, hw_product_name, os_manufacturer, os_product_name): # pylint: disable=R0913
         """Set ProductInfo on a device.
 
         """
