@@ -5,7 +5,7 @@ import json
 import logging
 import requests
 
-log = logging.getLogger(__name__)
+log = logging.getLogger(__name__) # pylint: disable=C0103
 
 ROUTERS = {'MessagingRouter': 'messaging',
            'EventsRouter': 'evconsole',
@@ -26,6 +26,8 @@ class ZenossException(Exception):
 
 
 class Zenoss(object):
+    '''A class that represents a connection to a Zenoss server
+    '''
     def __init__(self, host, username, password):
         self.__host = host
         self.__session = requests.Session()
