@@ -21,8 +21,7 @@ ROUTERS = {'MessagingRouter': 'messaging',
 
 
 class ZenossException(Exception):
-    def __call__(self, *args):
-        return self.__class__(*(self.args + args))
+    pass
 
 
 class Zenoss(object):
