@@ -1,3 +1,5 @@
+'''Python module to work with the Zenoss JSON API
+'''
 import re
 import json
 import logging
