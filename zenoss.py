@@ -208,6 +208,20 @@ class Zenoss(object):
         log.info('Getting events for %s', data)
         return self.__router_request('EventsRouter', 'query', [data])['events']
 
+    def get_event_detail(self, event_id):
+        """Find specific event details
+
+        """
+	data = dict(evid=event_id)
+        return self.__router_request('EventsRouter', 'detail', [data])
+
+    def write_log(self, event_id, message):
+        """Write a message to the event's log
+
+        """
+        data = dict(evid=event_id, message=message)
+        return self.__router_request('EventsRouter', 'write_log', [data])
+
     def change_event_state(self, event_id, state):
         """Change the state of an event.
 
