@@ -24,11 +24,10 @@ class ZenossException(Exception):
 
 
 class Zenoss(object):
-    def __init__(self, host, username, password, pem_path=None):
+    def __init__(self, host, username, password):
         self.__host = host
         self.__session = requests.Session()
         self.__session.auth = (username, password)
-        self.__pem_path = pem_path
         self.__req_count = 0
 
     def __router_request(self, router, method, data=None):
