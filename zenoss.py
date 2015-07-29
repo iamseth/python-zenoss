@@ -213,7 +213,7 @@ class Zenoss(object):
         """Find specific event details
 
         """
-	data = dict(evid=event_id)
+        data = dict(evid=event_id)
         return self.__router_request('EventsRouter', 'detail', [data])
 
     def write_log(self, event_id, message):
