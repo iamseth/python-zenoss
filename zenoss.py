@@ -102,6 +102,9 @@ class Zenoss(object):
             log.error('Cannot locate device %s', device_name)
             raise Exception('Cannot locate device %s' % device_name)
 
+    def device_uid(self, device):
+        return self.find_device(device)['uid']
+
     def add_device(self, device_name, device_class, collector='localhost'):
         """Add a device.
 
