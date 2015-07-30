@@ -6,6 +6,7 @@ import logging
 import requests
 
 log = logging.getLogger(__name__) # pylint: disable=C0103
+requests.packages.urllib3.disable_warnings()
 
 ROUTERS = {'MessagingRouter': 'messaging',
            'EventsRouter': 'evconsole',
