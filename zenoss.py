@@ -65,7 +65,7 @@ class Zenoss(object):
 
         return json.loads(response.content)['result']
 
-    def get_rrd_values(self, device, dsnames, start=None, end=None, function='LAST'):
+    def get_rrd_values(self, device, dsnames, start=None, end=None, function='LAST'): # pylint: disable=R0913
         '''Method to abstract the details of making a request to the getRRDValue method for a device
         '''
         if function not in ['MINIMUM', 'AVERAGE', 'MAXIMUM', 'LAST']:
@@ -105,6 +105,8 @@ class Zenoss(object):
             raise Exception('Cannot locate device %s' % device_name)
 
     def device_uid(self, device):
+        '''Helper method to retrieve the device UID for a given device name
+        '''
         return self.find_device(device)['uid']
 
     def add_device(self, device_name, device_class, collector='localhost'):
@@ -275,7 +277,9 @@ class Zenoss(object):
     def get_load_average(self, device):
         '''Returns the current 1, 5 and 15 minute load averages for a device.
         '''
-        result = self.get_rrd_values(device=device, dsnames=['laLoadInt1_laLoadInt1', 'laLoadInt5_laLoadInt5', 'laLoadInt15_laLoadInt15'])
-        def normalize_load(l):
-            return round(float(l) / 100.0, 2)
+        dsnames = ('laLoadInt1_laLoadInt1', 'laLoadInt5_laLoadInt5', 'laLoadInt15_laLoadInt15')
+        result = self.get_rrd_values(device=device, dsnames=dsnames)
+        def normalize_load(load):
+            '''Convert raw RRD load average to something reasonable so that it matches output from /proc/loadavg'''
+            return round(float(load) / 100.0, 2)
         return [normalize_load(l) for l in result.values()]
