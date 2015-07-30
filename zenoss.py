@@ -1,5 +1,6 @@
 '''Python module to work with the Zenoss JSON API
 '''
+import ast
 import re
 import json
 import logging
@@ -271,9 +272,10 @@ class Zenoss(object):
         data = dict(device=device_name, summary=summary, severity=severity, component='', evclasskey='', evclass='')
         return self.__router_request('EventsRouter', 'add_event', [data])
 
-    def get_load_average(self, device_name):
-        """Returns the 5 minute load average for a device.
+    def get_load_average(self, device):
+        """Returns the current 1, 5 and 15 minute load averages for a device.
         """
-        result = self._rrd_request(device_name, 'laLoadInt5_laLoadInt5')
-        return round(float(result) / 100.0, 2)
-
+        result = self.get_rrd_values(device=device, dsnames=['laLoadInt1_laLoadInt1', 'laLoadInt5_laLoadInt5', 'laLoadInt15_laLoadInt15'])
+        def normalize_load(l):
+            return round(float(l) / 100.0, 2)
+        return [normalize_load(l) for l in result.values()]
