@@ -63,11 +63,19 @@ class Zenoss(object):
 
         return json.loads(response.content)['result']
 
-    def _rrd_request(self, device_name, dsname):
+    def get_rrd_values(self, device, dsnames, start=None, end=None, function='LAST'):
         '''Method to abstract the details of making a request to the getRRDValue method for a device
         '''
-        device_uid = self.find_device(device_name)['uid']
-        return self.__session.get('%s/%s/getRRDValue?dsname=%s' % (self.__host, device_uid, dsname)).content
+        if function not in ['MINIMUM', 'AVERAGE', 'MAXIMUM', 'LAST']:
+            raise ZenossException('Invalid RRD function {0} given.'.format(function))
+
+        if len(dsnames) == 1:
+            # Appending a junk value to dsnames because if only one value is provided Zenoss fails to return a value.
+            dsnames.append('junk')
+
+        url = '{0}/{1}/getRRDValues'.format(self.__host, self.device_uid(device))
+        params = {'dsnames': dsnames, 'start': start, 'end': end, 'function': function}
+        return ast.literal_eval(self.__session.get(url, params=params).content)
 
     def get_devices(self, device_class='/zport/dmd/Devices', limit=None):
         """Get a list of all devices.
