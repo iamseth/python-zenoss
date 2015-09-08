@@ -31,10 +31,11 @@ class ZenossException(Exception):
 class Zenoss(object):
     '''A class that represents a connection to a Zenoss server
     '''
-    def __init__(self, host, username, password):
+    def __init__(self, host, username, password, ssl_verify=True):
         self.__host = host
         self.__session = requests.Session()
         self.__session.auth = (username, password)
+        self.__session.verify = ssl_verify
         self.__req_count = 0
 
     def __router_request(self, router, method, data=None):
