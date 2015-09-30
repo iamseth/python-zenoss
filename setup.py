@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(name='zenoss',
 
-version='0.6.1',
+version='0.6.2',
     description='Module to work with the Zenoss JSON API.',
     author="Seth Miller",
     author_email='seth@sethmiller.me',
