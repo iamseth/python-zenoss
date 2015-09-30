@@ -60,11 +60,12 @@ class Zenoss(object):
         # The API returns a 200 response code even whe auth is bad.
         # With bad auth, the login page is displayed. Here I search for
         # an element on the login form to determine if auth failed.
-        if re.search('name="__ac_name"', response.content):
+
+        if re.search('name="__ac_name"', response.content.decode("utf-8")):
             log.error('Request failed. Bad username/password.')
             raise ZenossException('Request failed. Bad username/password.')
 
-        return json.loads(response.content)['result']
+        return json.loads(response.content.decode("utf-8"))['result']
 
     def get_rrd_values(self, device, dsnames, start=None, end=None, function='LAST'): # pylint: disable=R0913
         '''Method to abstract the details of making a request to the getRRDValue method for a device
