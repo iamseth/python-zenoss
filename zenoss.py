@@ -228,17 +228,17 @@ class Zenoss(object):
              will appear.
 
         '''
-        if not severity:
+        if severity is None:
             severity = [5, 4, 3, 2]
-        if not event_state:
+        if event_state is None:
             event_state = [0, 1]
         data = dict(start=start, limit=limit, dir=direction, sort=sort)
         data['params'] = dict(severity=severity, eventState=event_state)
-        if device:
+        if device is not None:
             data['params']['device'] = device
-        if component:
+        if component is not None:
             data['params']['component'] = component
-        if event_class:
+        if event_class is not None:
             data['params']['eventClass'] = event_class
         log.info('Getting events for %s', data)
         return self.__router_request(
