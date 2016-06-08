@@ -218,12 +218,22 @@ class Zenoss(object):
         data = dict(uids=[device['uid']], hashcheck=device['hash'], ip=ip_address)
         return self.__router_request('DeviceRouter', 'resetIp', [data])
 
-    def get_events(self, device=None, limit=100, component=None, event_class=None):
+    def get_events(self, device=None, limit=100, component=None,
+                   severity=None, event_class=None, start=0,
+                   event_state=None, sort='severity', direction='DESC'):
         '''Find current events.
+             Returns a list of dicts containing event details. By default
+             they are sorted in descending order of severity.  By default,
+             severity {5, 4, 3, 2} and state {0, 1} are the only events that
+             will appear.
 
         '''
-        data = dict(start=0, limit=limit, dir='DESC', sort='severity')
-        data['params'] = dict(severity=[5, 4, 3, 2], eventState=[0, 1])
+        if not severity:
+            severity = [5, 4, 3, 2]
+        if not event_state:
+            event_state = [0, 1]
+        data = dict(start=start, limit=limit, dir=direction, sort=sort)
+        data['params'] = dict(severity=severity, eventState=event_state)
         if device:
             data['params']['device'] = device
         if component:
@@ -231,7 +241,8 @@ class Zenoss(object):
         if event_class:
             data['params']['eventClass'] = event_class
         log.info('Getting events for %s', data)
-        return self.__router_request('EventsRouter', 'query', [data])['events']
+        return self.__router_request(
+            'EventsRouter', 'query', [data])['events']
 
     def get_event_detail(self, event_id):
         '''Find specific event details
