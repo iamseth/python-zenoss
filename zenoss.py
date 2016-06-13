@@ -89,6 +89,21 @@ class Zenoss(object):
         return self.__router_request('DeviceRouter', 'getDevices',
                                      data=[{'uid': device_class, 'params': {}, 'limit': limit}])
 
+    def get_components(self, device_name, **kwargs):
+        '''Get components for a device given the name
+        '''
+        uid = self.device_uid(device_name)
+        return self.get_components_by_uid(uid=uid, **kwargs)
+
+    def get_components_by_uid(self, uid=None, meta_type=None, keys=None,
+                              start=0, limit=50, page=0,
+                              sort='name', dir='ASC', name=None):
+        '''Get components for a device given the uid
+        '''
+        data = dict(uid=uid, meta_type=meta_type, keys=keys, start=start,
+                    limit=limit, page=page, sort=sort, dir=dir, name=name)
+        return self.__router_request('DeviceRouter', 'getComponents', [data])
+
     def find_device(self, device_name):
         '''Find a device by name.
 
