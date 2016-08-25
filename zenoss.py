@@ -89,6 +89,21 @@ class Zenoss(object):
         return self.__router_request('DeviceRouter', 'getDevices',
                                      data=[{'uid': device_class, 'params': {}, 'limit': limit}])
 
+    def get_components(self, device_name, **kwargs):
+        '''Get components for a device given the name
+        '''
+        uid = self.device_uid(device_name)
+        return self.get_components_by_uid(uid=uid, **kwargs)
+
+    def get_components_by_uid(self, uid=None, meta_type=None, keys=None,
+                              start=0, limit=50, page=0,
+                              sort='name', dir='ASC', name=None):
+        '''Get components for a device given the uid
+        '''
+        data = dict(uid=uid, meta_type=meta_type, keys=keys, start=start,
+                    limit=limit, page=page, sort=sort, dir=dir, name=name)
+        return self.__router_request('DeviceRouter', 'getComponents', [data])
+
     def find_device(self, device_name):
         '''Find a device by name.
 
@@ -218,20 +233,31 @@ class Zenoss(object):
         data = dict(uids=[device['uid']], hashcheck=device['hash'], ip=ip_address)
         return self.__router_request('DeviceRouter', 'resetIp', [data])
 
-    def get_events(self, device=None, limit=100, component=None, event_class=None):
+    def get_events(self, device=None, limit=100, component=None,
+                   severity=None, event_class=None, start=0,
+                   event_state=None, sort='severity', direction='DESC'):
         '''Find current events.
+             Returns a list of dicts containing event details. By default
+             they are sorted in descending order of severity.  By default,
+             severity {5, 4, 3, 2} and state {0, 1} are the only events that
+             will appear.
 
         '''
-        data = dict(start=0, limit=limit, dir='DESC', sort='severity')
-        data['params'] = dict(severity=[5, 4, 3, 2], eventState=[0, 1])
-        if device:
+        if severity is None:
+            severity = [5, 4, 3, 2]
+        if event_state is None:
+            event_state = [0, 1]
+        data = dict(start=start, limit=limit, dir=direction, sort=sort)
+        data['params'] = dict(severity=severity, eventState=event_state)
+        if device is not None:
             data['params']['device'] = device
-        if component:
+        if component is not None:
             data['params']['component'] = component
-        if event_class:
+        if event_class is not None:
             data['params']['eventClass'] = event_class
         log.info('Getting events for %s', data)
-        return self.__router_request('EventsRouter', 'query', [data])['events']
+        return self.__router_request(
+            'EventsRouter', 'query', [data])['events']
 
     def get_event_detail(self, event_id):
         '''Find specific event details
@@ -266,14 +292,16 @@ class Zenoss(object):
         '''
         return self.change_event_state(event_id, 'close')
 
-    def create_event_on_device(self, device_name, severity, summary):
+    def create_event_on_device(self, device_name, severity, summary,
+                               component='', evclasskey='', evclass=''):
         '''Manually create a new event for the device specified.
 
         '''
         log.info('Creating new event for %s with severity %s', device_name, severity)
         if severity not in ('Critical', 'Error', 'Warning', 'Info', 'Debug', 'Clear'):
             raise Exception('Severity %s is not valid.' % severity)
-        data = dict(device=device_name, summary=summary, severity=severity, component='', evclasskey='', evclass='')
+        data = dict(device=device_name, summary=summary, severity=severity,
+                    component=component, evclasskey=evclasskey, evclass=evclass)
         return self.__router_request('EventsRouter', 'add_event', [data])
 
     def get_load_average(self, device):
