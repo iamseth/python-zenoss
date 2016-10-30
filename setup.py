@@ -11,5 +11,6 @@ version='0.6.2',
     url='https://github.com/iamseth/python-zenoss',
     py_modules=['zenoss',],
     keywords = ['zenoss', 'api', 'json', 'rest'],
-    test_suite='tests'
+    test_suite='tests',
+    data_files = [('', ['LICENSE.txt']),('', ['README.md']),('examples', ['list_devices.py']),]
 )
